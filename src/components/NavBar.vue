@@ -1,12 +1,26 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 
 // Props
 const props = defineProps({
   isDarkMode: {
     type: Boolean,
     default: false
+  },
+  profileImgSrc: {
+    type: String,
+    default: ''
   }
+});
+
+// Calculer l'URL de l'image avec solution de secours
+const imageSource = computed(() => {
+  return props.profileImgSrc || 'https://images.unsplash.com/photo-1607799279861-4dd421887fb3?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80';
+});
+
+// Surveiller les changements de l'URL de l'image
+watch(() => props.profileImgSrc, (newValue) => {
+  console.log('Image URL changed:', newValue);
 });
 
 // Émission d'événements
@@ -52,6 +66,19 @@ onMounted(() => {
 <template>
   <header class="navbar" :class="{ 'scrolled': isScrolled }">
     <div class="navbar-container">
+      <!-- Image de profil (visible seulement sur mobile) -->
+      <div class="navbar-profile-img" :class="{ active: !!profileImgSrc }">
+        <div class="navbar-profile-frame">
+          <img 
+            :src="imageSource" 
+            :alt="`Profile ${profileImgSrc ? 'loaded' : 'not loaded'}`" 
+            class="profile-image"
+            @load="console.log('Image loaded successfully')"
+            @error="console.error('Failed to load image:', imageSource)"
+          />
+        </div>
+      </div>
+      
       <!-- Logo -->
       <div class="navbar-logo">
         <a href="#hero" @click.prevent="scrollToSection('hero')">
@@ -292,6 +319,140 @@ onMounted(() => {
 .menu-toggle .open span:nth-child(3) {
   transform: rotate(-45deg);
   top: 14px;
+}
+
+/* Styles pour l'image de profil dans la navbar */
+.navbar-profile-img {
+  width: 0;
+  height: 40px;
+  opacity: 0;
+  overflow: hidden;
+  margin-right: 0;
+  transition: all 0.5s ease;
+  display: flex;
+  align-items: center;
+  position: relative;
+  z-index: 5;
+}
+
+.navbar-profile-img.active {
+  width: 40px;
+  opacity: 1;
+  margin-right: 10px;
+  visibility: visible;
+}
+
+.navbar-profile-frame {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid var(--primary);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
+  position: relative;
+  z-index: 5;
+}
+
+.navbar-profile-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 50%;
+}
+
+/* Media queries pour petits écrans */
+@media (max-width: 768px) {
+  .navbar-profile-img {
+    display: flex;
+    align-items: center;
+    position: relative;
+  }
+  
+  /* Ces styles seront activés par JavaScript quand l'image est déplacée */
+  .navbar-profile-img.active {
+    transform: scale(1);
+    opacity: 1;
+    width: 40px;
+    margin-right: 10px;
+  }
+  
+  .navbar-container {
+    justify-content: space-between;
+    gap: 10px;
+  }
+  
+  .navbar-logo {
+    margin-left: 0;
+  }
+  
+  .navbar-actions {
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 576px) {
+  .navbar-container {
+    padding: 0 3%;
+    justify-content: space-between;
+  }
+  
+  .navbar-profile-frame {
+    width: 35px;
+    height: 35px;
+  }
+  
+  .logo-text {
+    font-size: 1.3rem;
+  }
+  
+  .navbar-actions {
+    margin-left: auto;
+    gap: 12px;
+  }
+  
+  .theme-toggle {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+@media (max-width: 380px) {
+  .navbar-container {
+    padding: 0 2%;
+    justify-content: space-between;
+  }
+  
+  .navbar-profile-frame {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .logo-text {
+    font-size: 1.1rem;
+  }
+  
+  .navbar-actions {
+    margin-left: auto;
+    gap: 8px;
+  }
+  
+  .theme-toggle {
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
+  }
+  
+  .menu-toggle {
+    width: 28px;
+    height: 28px;
+  }
 }
 
 @media (max-width: 992px) {

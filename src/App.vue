@@ -6,6 +6,9 @@ import Footer from './components/Footer.vue';
 // Gestion du thème sombre
 const isDarkMode = ref(false);
 
+// Variable pour stocker l'URL de l'image de profil pour la navbar
+const profileImageUrl = ref('');
+
 // Compétences avec leurs logos
 const skills = [
   { name: 'Python', level: 95, icon: 'fab fa-python' },
@@ -198,12 +201,17 @@ const startOrbitAnimation = () => {
   });
 };
 
+// Variables pour garder la référence de l'image originale et son clone
+let originalImgSrc = '';
+let heroImgElement = null;
+let navbarImgContainer = null;
+
 // Initialiser les compétences en grille
 const initGridSkills = () => {
   const gridSkills = document.querySelectorAll('.grid-skill');
   
   // Adapter l'animation selon la taille d'écran
-  const mediaQuery = window.matchMedia('(max-width: 992px)');
+  const mediaQuery = window.matchMedia('(max-width: 768px)');
   setGridSkillsVisibility(mediaQuery.matches);
   
   // Écouter les changements de taille d'écran
@@ -217,40 +225,97 @@ const setGridSkillsVisibility = (isSmallScreen) => {
   const orbiteContainer = document.querySelector('.orbit-skills-container');
   const gridContainer = document.querySelector('.grid-skills-container');
   const imageWrapper = document.querySelector('.hero-image-wrapper');
+  const heroSection = document.querySelector('.hero-section');
+  const navbarProfileImg = document.querySelector('.navbar-profile-img');
+  const circleFrame = document.querySelector('.circle-frame');
+  
+  if (!heroImgElement && circleFrame) {
+    heroImgElement = circleFrame.querySelector('img');
+    if (heroImgElement) {
+      originalImgSrc = heroImgElement.src;
+      console.log('Image source found:', originalImgSrc);
+    }
+  }
+  
+  if (!navbarImgContainer) {
+    navbarImgContainer = navbarProfileImg;
+  }
   
   if (isSmallScreen) {
-    // Mode mobile : image à gauche, grille à droite
-    orbiteContainer.style.opacity = '0';
-    orbiteContainer.style.transform = 'scale(0.9)';
-    orbiteContainer.style.animation = 'orbitDisappear 0.5s forwards';
-    orbiteContainer.style.pointerEvents = 'none';
-    
-    gridContainer.style.opacity = '1';
-    gridContainer.style.pointerEvents = 'auto';
-    
-    // Animer les compétences en grille
-    document.querySelectorAll('.grid-skill').forEach((skill, index) => {
-      skill.style.animation = `gridAppear 0.5s ${index * 0.08}s forwards`;
-      skill.style.opacity = '1';
-    });
-    
-    // Positionner l'image à gauche avec une transition fluide
-    if (window.innerWidth <= 768) {
-      imageWrapper.style.justifyContent = 'space-between';
+    // Mode mobile : déplacer l'image vers la navbar et masquer les icônes
+    // 1. Cacher l'orbite et les compétences
+    if (orbiteContainer) {
+      orbiteContainer.style.opacity = '0';
+      orbiteContainer.style.transform = 'scale(0.8)';
+      orbiteContainer.style.animation = 'orbitDisappear 0.5s forwards';
+      orbiteContainer.style.pointerEvents = 'none';
     }
+    
+    if (gridContainer) {
+      gridContainer.style.opacity = '0';
+      gridContainer.style.transform = 'translateX(20px)';
+      gridContainer.style.pointerEvents = 'none';
+    }
+    
+    // 2. Réduire l'espace du hero
+    if (heroSection) {
+      heroSection.style.paddingTop = '100px';
+      heroSection.style.minHeight = 'auto';
+    }
+    
+    // 3. Masquer la section image du hero
+    if (imageWrapper) {
+      imageWrapper.style.opacity = '0';
+      imageWrapper.style.height = '0';
+      imageWrapper.style.overflow = 'hidden';
+      imageWrapper.style.marginBottom = '0';
+    }
+    
+    // 4. Afficher l'image dans la navbar
+    if (navbarImgContainer && originalImgSrc) {
+      navbarImgContainer.classList.add('active');
+      // Mettre à jour la variable réactive pour l'URL de l'image avec un délai 
+      // pour s'assurer que les styles CSS ont le temps de s'appliquer
+      setTimeout(() => {
+        console.log('Setting profile image URL to:', originalImgSrc);
+        profileImageUrl.value = originalImgSrc;
+      }, 50);
+    }
+    
   } else {
     // Mode desktop : image à droite avec orbite
-    orbiteContainer.style.opacity = '1';
-    orbiteContainer.style.transform = 'scale(1)';
-    orbiteContainer.style.animation = '';
-    orbiteContainer.style.pointerEvents = 'auto';
+    if (orbiteContainer) {
+      orbiteContainer.style.opacity = '1';
+      orbiteContainer.style.transform = 'scale(1)';
+      orbiteContainer.style.animation = '';
+      orbiteContainer.style.pointerEvents = 'auto';
+    }
     
-    gridContainer.style.opacity = '0';
-    gridContainer.style.transform = 'translateX(30px)';
-    gridContainer.style.pointerEvents = 'none';
+    if (gridContainer) {
+      gridContainer.style.opacity = '0';
+      gridContainer.style.transform = 'translateX(30px)';
+      gridContainer.style.pointerEvents = 'none';
+    }
     
-    // Repositionner l'image
-    imageWrapper.style.justifyContent = 'center';
+    // Restaurer l'apparence du hero
+    if (heroSection) {
+      heroSection.style.paddingTop = '120px';
+      heroSection.style.minHeight = '90vh';
+    }
+    
+    // Rétablir l'image du hero
+    if (imageWrapper) {
+      imageWrapper.style.opacity = '1';
+      imageWrapper.style.height = '580px';
+      imageWrapper.style.overflow = 'visible';
+    }
+    
+    // Masquer l'image dans la navbar
+    if (navbarImgContainer) {
+      navbarImgContainer.classList.remove('active');
+      // Effacer l'URL de l'image
+      profileImageUrl.value = '';
+    }
   }
 };
 
@@ -343,8 +408,8 @@ const generateBinaryBackground = () => {
       <div class="bg-shape shape-crypto"></div>
     </div>
     
-    <!-- Navigation -->
-    <NavBar :isDarkMode="isDarkMode" @toggle-theme="toggleTheme" />
+    <!-- Navigation - Passer profileImageUrl comme prop -->
+    <NavBar :isDarkMode="isDarkMode" :profileImgSrc="profileImageUrl" @toggle-theme="toggleTheme" />
     
     <!-- Hero Section -->
     <section id="hero" class="hero-section">
@@ -429,7 +494,7 @@ const generateBinaryBackground = () => {
         <div class="about-content">
           <div class="about-text">
             <p>Chercheur en cryptographie et développeur backend expérimenté, je combine expertise technique et recherche académique pour développer des solutions sécurisées et performantes. Mon parcours professionnel m'a permis d'acquérir une solide maîtrise des technologies Python (Django, FastAPI, Flask), du développement d'API et des architectures microservices. Je possède également des compétences en développement frontend (JavaScript, Vue.js, Nuxt.js) et en DevOps (Docker, Git).</p>
-            <p>Actuellement en service à l'Agence Nationale des Technologies de l'Information et de la Communication (ANTIC), au Centre National de Cryptographie et de Certification Électronique (CNCCE) à Yaoundé, je contribue à la sécurisation des infrastructures numériques et au développement de solutions cryptographiques innovantes.</p>
+            <p>Ma spécialisation en cryptographie et en sécurité informatique me permet de concevoir des solutions robustes et fiables. Au Centre National de Cryptographie et de Certification Électronique (CNCCE) à Yaoundé, je contribue à la sécurisation des infrastructures numériques et au développement de solutions cryptographiques innovantes.</p>
             
             <div class="skills-list">
               <div v-for="skill in skills" :key="skill.name" class="skill-item">
@@ -508,19 +573,19 @@ const generateBinaryBackground = () => {
             <div class="contact-card">
               <i class="fas fa-envelope contact-icon"></i>
               <h3>Email</h3>
-              <p>emmanuel.yakam@antic.cm</p>
+              <p>emmanuelyakam1@gmail.com</p>
             </div>
             
             <div class="contact-card">
               <i class="fas fa-phone-alt contact-icon"></i>
               <h3>Téléphone</h3>
-              <p>+237 6XX XX XX XX</p>
+              <p>+237 6 55 64 42 93</p>
             </div>
             
             <div class="contact-card">
               <i class="fas fa-map-marker-alt contact-icon"></i>
               <h3>Localisation</h3>
-              <p>ANTIC, CNCCE, Yaoundé, Cameroun</p>
+              <p>CNCCE, Yaoundé, Cameroun</p>
             </div>
           </div>
           
@@ -665,6 +730,7 @@ const generateBinaryBackground = () => {
   position: relative;
   z-index: 1;
   overflow: hidden;
+  transition: padding-top 0.8s ease, min-height 0.8s ease;
 }
 
 .hero-content {
@@ -672,6 +738,7 @@ const generateBinaryBackground = () => {
   grid-template-columns: 1fr 1fr;
   gap: 40px;
   align-items: center;
+  transition: opacity 0.6s ease, height 0.8s ease, margin-bottom 0.6s ease;
 }
 
 .hero-title {
@@ -714,6 +781,7 @@ const generateBinaryBackground = () => {
   position: relative;
   height: 580px;
   perspective: 1000px; /* Pour l'effet 3D */
+  transition: opacity 0.6s ease, height 0.8s ease, margin-bottom 0.6s ease;
 }
 
 .orbit-container {
@@ -826,7 +894,7 @@ const generateBinaryBackground = () => {
   top: 0;
   left: 0;
   z-index: 4;
-  transition: opacity 0.6s ease, transform 0.8s ease;
+  transition: opacity 0.8s ease, transform 0.8s ease;
 }
 
 .grid-skills-container {
@@ -840,7 +908,7 @@ const generateBinaryBackground = () => {
   transform: translateX(30px);
   pointer-events: none;
   z-index: 4;
-  transition: all 0.6s ease;
+  transition: opacity 0.8s ease, transform 0.8s ease;
 }
 
 .orbit-skill {
@@ -1593,12 +1661,24 @@ const generateBinaryBackground = () => {
     font-size: 1rem;
   }
   
-  .expertise-badges {
-    gap: 10px;
+  .hero-content {
+    padding-top: 0;
   }
   
-  .expertise-badge {
-    padding: 8px 15px;
+  .hero-title {
+    margin-top: 1rem;
+  }
+  
+  /* Animation pour faire disparaître progressivement l'orbite des icônes */
+  @keyframes orbitDisappear {
+    0% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(0.8) translateY(-10px);
+    }
   }
 }
 
@@ -2246,4 +2326,46 @@ a, button, .project-card, .contact-card, input, textarea {
   margin-top: 60px;
   overflow: hidden;
 }
+
+/* Transitions fluides pour les éléments qui changent de place/taille */
+.hero-section {
+  transition: padding-top 0.8s ease, min-height 0.8s ease;
+}
+
+.hero-image-wrapper {
+  transition: opacity 0.6s ease, height 0.8s ease, margin-bottom 0.6s ease;
+}
+
+.orbit-skills-container {
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.grid-skills-container {
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+/* Ajustements pour l'image qui se déplace vers la navbar */
+@media (max-width: 768px) {
+  .hero-content {
+    padding-top: 0;
+  }
+  
+  .hero-title {
+    margin-top: 1rem;
+  }
+  
+  /* Animation pour faire disparaître progressivement l'orbite des icônes */
+  @keyframes orbitDisappear {
+    0% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(0.8) translateY(-10px);
+    }
+  }
+}
 </style>
+
+

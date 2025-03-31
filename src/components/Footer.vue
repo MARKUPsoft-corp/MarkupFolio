@@ -52,7 +52,7 @@ const socialLinks = ref([
     <div class="footer-bottom">
       <div class="footer-bottom-content">
         <p>© {{ currentYear }} MARKUP<span class="accent-text">folio</span> | YAKAM TCHAMEGNI Emmanuel</p>
-        <p class="footer-affiliation">ANTIC - Centre National de Cryptographie et de Certification Électronique (CNCCE), Yaoundé</p>
+        <p class="footer-affiliation">CNCCE, Yaoundé, Cameroun | <a href="mailto:emmanuelyakam1@gmail.com">emmanuelyakam1@gmail.com</a></p>
       </div>
     </div>
   </footer>
