@@ -1765,7 +1765,6 @@ const generateBinaryBackground = () => {
   height: 100%;
   object-fit: cover;
   object-position: center;
-  transform: scale(1.1); /* Léger zoom pour éviter les bords blancs lors du flou */
   transition: transform 15s ease-in-out; /* Transition très lente pour un effet subtil */
 }
 
@@ -1991,7 +1990,6 @@ html {
   border: 2px solid var(--primary);
   border-radius: 50%;
   opacity: 0;
-  transform: scale(1.1);
   transition: all 0.3s ease;
 }
 
@@ -2232,9 +2230,5 @@ a, button, .project-card, .contact-card, input, textarea {
   .hero-subtitle {
     font-size: 0.8rem;
   }
-}
-
-  0% { transform: scale(1.1); }
-  100% { transform: scale(1.2); }
 }
 </style>
