@@ -279,8 +279,9 @@ const socialLinks = ref([
 
 .footer-bottom {
   max-width: 1200px;
-  margin: 40px auto 0;
-  padding-top: 20px;
+  margin: 30px auto 0;
+  padding-top: 15px;
+  padding-bottom: 10px;
   border-top: 1px solid rgba(var(--border-color), 0.2);
   text-align: center;
   font-size: 0.9rem;
@@ -357,8 +358,8 @@ const socialLinks = ref([
 /* Media queries supplémentaires pour petits écrans */
 @media (max-width: 576px) {
   .footer {
-    padding: 40px 15px 20px;
-    margin-top: 40px;
+    padding: 40px 15px 10px;
+    margin-top: 30px;
   }
   
   .footer-wave {
@@ -399,7 +400,8 @@ const socialLinks = ref([
   }
   
   .footer-bottom {
-    margin-top: 30px;
+    margin-top: 20px;
+    padding-bottom: 5px;
     font-size: 0.8rem;
   }
   
@@ -467,6 +469,11 @@ const socialLinks = ref([
 
 /* Très petits écrans */
 @media (max-width: 320px) {
+  .footer {
+    padding: 25px 10px 5px;
+    margin-top: 20px;
+  }
+  
   .footer-content {
     gap: 20px;
   }
@@ -485,6 +492,9 @@ const socialLinks = ref([
   }
   
   .footer-bottom {
+    margin-top: 15px;
+    padding-top: 10px;
+    padding-bottom: 3px;
     font-size: 0.75rem;
     word-wrap: break-word;
   }

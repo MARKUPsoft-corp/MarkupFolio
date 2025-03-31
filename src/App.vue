@@ -563,6 +563,8 @@ const generateBinaryBackground = () => {
 .portfolio-app {
   position: relative;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
   overflow-x: hidden;
 }
 
@@ -984,6 +986,32 @@ const generateBinaryBackground = () => {
   font-weight: 700;
   margin-bottom: 15px;
   color: var(--text-main);
+}
+
+.section-header h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  border-radius: 2px;
+  box-shadow: 0 2px 8px rgba(0, 171, 145, 0.3), 0 2px 8px rgba(255, 107, 53, 0.3);
+  animation: gradientShift 3s ease infinite;
+  background-size: 200% 100%;
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 .section-header p {
@@ -2208,5 +2236,14 @@ a, button, .project-card, .contact-card, input, textarea {
 @keyframes slowZoom {
   0% { transform: scale(1.1); }
   100% { transform: scale(1.2); }
+}
+
+.footer {
+  position: relative;
+  background-color: var(--card-bg);
+  padding: 60px 20px 15px;
+  color: var(--text-main);
+  margin-top: 60px;
+  overflow: hidden;
 }
 </style>
