@@ -1,0 +1,560 @@
+<script setup>
+import { ref, onMounted } from 'vue';
+import NavBar from './components/NavBar.vue';
+import Footer from './components/Footer.vue';
+
+// Gestion du thème sombre
+const isDarkMode = ref(false);
+
+// Compétences avec leurs logos
+const skills = [
+  { name: 'Python', level: 95, icon: 'fab fa-python' },
+  { name: 'Django', level: 90, icon: 'fas fa-scroll' },
+  { name: 'JavaScript', level: 88, icon: 'fab fa-js' },
+  { name: 'Vue.js', level: 85, icon: 'fab fa-vuejs' },
+  { name: 'Docker', level: 82, icon: 'fab fa-docker' },
+  { name: 'Git', level: 90, icon: 'fab fa-git-alt' },
+  { name: 'IA', level: 80, icon: 'fas fa-brain' },
+  { name: 'API', level: 92, icon: 'fas fa-network-wired' }
+];
+
+// Projets
+const projects = [
+  {
+    id: 1,
+    title: 'Système de Cryptographie',
+    category: 'Sécurité',
+    image: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
+    url: '#',
+    description: 'Solution de cryptographie avancée pour la sécurisation des données'
+  },
+  {
+    id: 2,
+    title: 'API Microservices',
+    category: 'Backend',
+    image: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
+    url: '#',
+    description: 'Architecture de microservices RESTful hautement évolutive'
+  },
+  {
+    id: 3,
+    title: 'Dashboard Analytics',
+    category: 'Full Stack',
+    image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
+    url: '#',
+    description: 'Tableau de bord interactif avec visualisation de données en temps réel'
+  }
+];
+
+// Texte du typing
+const typingText = ref('');
+const typingFirstName = ref('');
+const lastName = 'YAKAM TCHAMEGNI';
+const firstName = 'Emmanuel';
+let typingInterval = null;
+let isDeleting = false;
+let isTypingLastName = true;
+let charIndex = 0;
+
+// Texte chiffré pour l'animation
+const cryptoText = ref('');
+const plainText = "CRYPTOGRAPHY AND BACKEND DEVELOPMENT";
+let cryptoInterval = null;
+
+// Fonction de typing
+const typeText = () => {
+  if (isTypingLastName) {
+    // Typing du nom de famille
+    const currentText = lastName.substring(0, charIndex);
+    typingText.value = currentText;
+    
+    if (!isDeleting && charIndex < lastName.length) {
+      // Typing
+      charIndex++;
+      setTimeout(typeText, 150);
+    } else if (!isDeleting && charIndex === lastName.length) {
+      // Pause avant de commencer le prénom
+      setTimeout(() => {
+        isTypingLastName = false;
+        charIndex = 0;
+        typeText();
+      }, 1000);
+    } else if (isDeleting && charIndex > 0) {
+      // Deleting
+      charIndex--;
+      setTimeout(typeText, 80);
+    } else if (isDeleting && charIndex === 0) {
+      // Recommencer
+      isDeleting = false;
+      setTimeout(typeText, 500);
+    }
+  } else {
+    // Typing du prénom
+    const currentText = firstName.substring(0, charIndex);
+    typingFirstName.value = currentText;
+    
+    if (!isDeleting && charIndex < firstName.length) {
+      // Typing
+      charIndex++;
+      setTimeout(typeText, 150);
+    } else if (!isDeleting && charIndex === firstName.length) {
+      // Pause à la fin
+      setTimeout(() => {
+        isDeleting = true;
+        typeText();
+      }, 2000);
+    } else if (isDeleting && charIndex > 0) {
+      // Deleting
+      charIndex--;
+      setTimeout(typeText, 80);
+    } else if (isDeleting && charIndex === 0) {
+      // Revenir au nom de famille
+      isTypingLastName = true;
+      isDeleting = false;
+      setTimeout(typeText, 500);
+    }
+  }
+};
+
+// Fonction pour simuler un texte chiffré
+const animateCrypto = () => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;:,./<>?';
+  let progress = 0;
+  let result = '';
+  
+  cryptoInterval = setInterval(() => {
+    result = '';
+    
+    for (let i = 0; i < plainText.length; i++) {
+      if (i < progress) {
+        result += plainText[i];
+      } else {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+    }
+    
+    cryptoText.value = result;
+    
+    if (progress >= plainText.length) {
+      clearInterval(cryptoInterval);
+      setTimeout(() => {
+        progress = 0;
+        animateCrypto();
+      }, 3000);
+    }
+    
+    progress += 1;
+  }, 100);
+};
+
+// Bascule du thème
+const toggleTheme = () => {
+  isDarkMode.value = !isDarkMode.value;
+  
+  if (isDarkMode.value) {
+    document.body.classList.add('dark-theme');
+  } else {
+    document.body.classList.remove('dark-theme');
+  }
+};
+
+onMounted(() => {
+  // Vérifier la préférence de thème
+  const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+  if (prefersDarkScheme.matches) {
+    isDarkMode.value = true;
+    document.body.classList.add('dark-theme');
+  }
+  
+  // Animation des particules de technologies
+  startOrbitAnimation();
+  
+  // Initialiser les compétences en grille
+  initGridSkills();
+  
+  // Initialiser les animations au scroll
+  initializeScrollAnimations();
+  
+  // Ajouter des particules flottantes
+  createFloatingParticles();
+  
+  // Démarrer l'effet de typing
+  typeText();
+  
+  // Générer du code binaire pour l'arrière-plan
+  generateBinaryBackground();
+  
+  // Démarrer l'animation de texte cryptographique
+  animateCrypto();
+});
+
+// Animation des particules des technologies
+const startOrbitAnimation = () => {
+  const orbitSkills = document.querySelectorAll('.orbit-skill');
+  
+  orbitSkills.forEach((skill, index) => {
+    const delay = index * (360 / skills.length);
+    skill.style.animation = `orbit 15s linear ${delay/36}s infinite`;
+  });
+};
+
+// Initialiser les compétences en grille
+const initGridSkills = () => {
+  const gridSkills = document.querySelectorAll('.grid-skill');
+  
+  // Adapter l'animation selon la taille d'écran
+  const mediaQuery = window.matchMedia('(max-width: 992px)');
+  setGridSkillsVisibility(mediaQuery.matches);
+  
+  // Écouter les changements de taille d'écran
+  mediaQuery.addEventListener('change', (e) => {
+    setGridSkillsVisibility(e.matches);
+  });
+};
+
+// Définir la visibilité des compétences en grille selon la taille d'écran
+const setGridSkillsVisibility = (isSmallScreen) => {
+  const orbiteContainer = document.querySelector('.orbit-skills-container');
+  const gridContainer = document.querySelector('.grid-skills-container');
+  const imageWrapper = document.querySelector('.hero-image-wrapper');
+  
+  if (isSmallScreen) {
+    // Mode mobile : image à gauche, grille à droite
+    orbiteContainer.style.opacity = '0';
+    orbiteContainer.style.transform = 'scale(0.9)';
+    orbiteContainer.style.animation = 'orbitDisappear 0.5s forwards';
+    orbiteContainer.style.pointerEvents = 'none';
+    
+    gridContainer.style.opacity = '1';
+    gridContainer.style.pointerEvents = 'auto';
+    
+    // Animer les compétences en grille
+    document.querySelectorAll('.grid-skill').forEach((skill, index) => {
+      skill.style.animation = `gridAppear 0.5s ${index * 0.08}s forwards`;
+      skill.style.opacity = '1';
+    });
+    
+    // Positionner l'image à gauche avec une transition fluide
+    if (window.innerWidth <= 768) {
+      imageWrapper.style.justifyContent = 'space-between';
+    }
+  } else {
+    // Mode desktop : image à droite avec orbite
+    orbiteContainer.style.opacity = '1';
+    orbiteContainer.style.transform = 'scale(1)';
+    orbiteContainer.style.animation = '';
+    orbiteContainer.style.pointerEvents = 'auto';
+    
+    gridContainer.style.opacity = '0';
+    gridContainer.style.transform = 'translateX(30px)';
+    gridContainer.style.pointerEvents = 'none';
+    
+    // Repositionner l'image
+    imageWrapper.style.justifyContent = 'center';
+  }
+};
+
+// Initialiser les animations au scroll
+const initializeScrollAnimations = () => {
+  // Intersection Observer pour détecter les éléments dans la vue
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('in-view');
+        
+        // Animer les barres de progression
+        const progressBars = entry.target.querySelectorAll('.skill-progress');
+        progressBars.forEach(bar => {
+          const targetWidth = bar.getAttribute('data-width-target');
+          setTimeout(() => {
+            bar.style.width = targetWidth;
+          }, 200);
+        });
+      }
+    });
+  }, { threshold: 0.15 });
+  
+  // Observer les éléments à animer
+  document.querySelectorAll('.section-header, .about-content, .projects-grid, .project-card, .contact-container').forEach(element => {
+    observer.observe(element);
+  });
+};
+
+// Créer des particules flottantes
+const createFloatingParticles = () => {
+  const container = document.querySelector('.portfolio-app');
+  const particlesCount = 20;
+  
+  for (let i = 0; i < particlesCount; i++) {
+    const particle = document.createElement('div');
+    particle.classList.add('floating-particle');
+    
+    // Taille aléatoire
+    const size = Math.random() * 6 + 2;
+    particle.style.width = `${size}px`;
+    particle.style.height = `${size}px`;
+    
+    // Position aléatoire
+    particle.style.left = `${Math.random() * 100}vw`;
+    particle.style.top = `${Math.random() * 200}vh`;
+    
+    // Délai et durée d'animation aléatoires
+    const animDuration = Math.random() * 15 + 15;
+    const animDelay = Math.random() * 10;
+    particle.style.animation = `floatingParticle ${animDuration}s ${animDelay}s infinite ease-in-out`;
+    
+    // Opacité aléatoire
+    particle.style.opacity = Math.random() * 0.5 + 0.1;
+    
+    // Couleur aléatoire entre primaire et accent
+    const isAccent = Math.random() > 0.7;
+    particle.classList.add(isAccent ? 'accent-particle' : 'primary-particle');
+    
+    container.appendChild(particle);
+  }
+};
+
+// Générer du code binaire pour l'arrière-plan
+const generateBinaryBackground = () => {
+  const binaryChars = '01';
+  const cryptoChars = '∀∃∈∉∋∌∑∏∐√∛∜∝∞∧∨∩∪≈≠≡≢≤≥';
+  const codeChars = '{}[]()<>/\\|=+-*:;,.?!@#$%^&~`"\'';
+  const allChars = binaryChars + cryptoChars + codeChars;
+  
+  let binaryString = '';
+  for (let i = 0; i < 5000; i++) {
+    binaryString += allChars.charAt(Math.floor(Math.random() * allChars.length));
+  }
+  
+  const background = document.querySelector('.animated-background');
+  background.setAttribute('data-binary', binaryString);
+};
+</script>
+
+<template>
+  <div class="portfolio-app" :class="{ 'dark-theme': isDarkMode }">
+    <!-- Arrière-plan animé avec flou -->
+    <div class="animated-background">
+      <div class="blur-overlay"></div>
+      <div class="bg-shape shape-1"></div>
+      <div class="bg-shape shape-2"></div>
+      <div class="bg-shape shape-3"></div>
+      <div class="bg-shape shape-4"></div>
+      <div class="bg-shape shape-crypto"></div>
+    </div>
+    
+    <!-- Navigation -->
+    <NavBar :isDarkMode="isDarkMode" @toggle-theme="toggleTheme" />
+    
+    <!-- Hero Section -->
+    <section id="hero" class="hero-section">
+      <div class="container">
+        <div class="hero-content">
+          <div class="hero-text">
+            <h1 class="hero-title">
+              <div class="typing-container">
+                <span class="typing-text">{{ typingText }}</span><span class="typing-cursor">|</span>
+              </div>
+              <div class="typing-container firstname-container">
+                <span class="typing-firstname">{{ typingFirstName }}</span><span class="typing-cursor" v-if="!isTypingLastName">|</span>
+              </div>
+              <div class="hero-subtitle-small">Chercheur en Cryptographie & <span class="accent">Développeur Backend</span></div>
+            </h1>
+            
+            <div class="crypto-animation">
+              <span class="crypto-text">{{ cryptoText }}</span>
+            </div>
+            
+            <p class="hero-subtitle">Spécialiste en développement backend Python, conception d'API et microservices, avec une expertise en cryptographie et sécurité informatique.</p>
+            
+            <div class="cta-buttons">
+              <a href="#portfolio" class="btn btn-primary">Voir mon portfolio</a>
+              <a href="#contact" class="btn btn-outline">Me contacter</a>
+            </div>
+          </div>
+          
+          <div class="hero-image-wrapper">
+            <!-- Orbite des technologies -->
+            <div class="orbit-container">
+              <!-- Image circulaire flottante -->
+              <div class="circle-frame">
+                <div class="circle-content">
+                  <img src="https://images.unsplash.com/photo-1607799279861-4dd421887fb3?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" alt="Emmanuel YAKAM" />
+                </div>
+                
+                <!-- Anneaux décoratifs autour du cercle -->
+                <div class="circle-ring"></div>
+                <div class="orbit-ring-orange"></div>
+              </div>
+              
+              <!-- Technologies en orbite (visibles sur grands écrans) -->
+              <div class="orbit-skills-container">
+                <div v-for="(skill, index) in skills" :key="`orbit-${skill.name}`" 
+                  class="orbit-skill" 
+                  :style="{ 
+                    '--angle': index * (360 / skills.length) + 'deg',
+                      '--orbit-radius': '260px'
+                  }">
+                <div class="skill-bubble">
+                  <i :class="skill.icon"></i>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Technologies en grille (visibles sur petits écrans) -->
+              <div class="grid-skills-container">
+                <div v-for="(skill, index) in skills" :key="`grid-${skill.name}`" 
+                    class="grid-skill" 
+                    :style="{ 
+                      '--delay': `${index * 0.1}s`
+                    }">
+                  <div class="skill-bubble">
+                    <i :class="skill.icon"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- About Section -->
+    <section id="about" class="section">
+      <div class="container">
+        <div class="section-header">
+          <h2>À propos de <span class="accent">moi</span></h2>
+        </div>
+        
+        <div class="about-content">
+          <div class="about-text">
+            <p>Chercheur en cryptographie et développeur backend expérimenté, je combine expertise technique et recherche académique pour développer des solutions sécurisées et performantes. Mon parcours professionnel m'a permis d'acquérir une solide maîtrise des technologies Python (Django, FastAPI, Flask), du développement d'API et des architectures microservices. Je possède également des compétences en développement frontend (JavaScript, Vue.js, Nuxt.js) et en DevOps (Docker, Git).</p>
+            <p>Actuellement en service à l'Agence Nationale des Technologies de l'Information et de la Communication (ANTIC), au Centre National de Cryptographie et de Certification Électronique (CNCCE) à Yaoundé, je contribue à la sécurisation des infrastructures numériques et au développement de solutions cryptographiques innovantes.</p>
+            
+            <div class="skills-list">
+              <div v-for="skill in skills" :key="skill.name" class="skill-item">
+                <div class="skill-info">
+                  <span class="skill-name">
+                    <i :class="skill.icon" class="skill-icon"></i>
+                    {{ skill.name }}
+                  </span>
+                  <span class="skill-percentage">{{ skill.level }}%</span>
+                </div>
+                <div class="skill-progress-bar">
+                  <div class="skill-progress" :style="{ width: '0%' }" :data-width-target="`${skill.level}%`"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Portfolio Section -->
+    <section id="portfolio" class="section">
+      <div class="container">
+        <div class="section-header">
+          <h2>Mon <span class="accent">Portfolio</span></h2>
+          <p>Une sélection de mes projets récents</p>
+        </div>
+        
+        <div class="expertise-badges">
+          <div class="expertise-badge">
+            <i class="fas fa-shield-alt"></i>
+            <span>Cryptographie</span>
+          </div>
+          <div class="expertise-badge">
+            <i class="fas fa-server"></i>
+            <span>Backend</span>
+          </div>
+          <div class="expertise-badge">
+            <i class="fas fa-code"></i>
+            <span>API</span>
+          </div>
+          <div class="expertise-badge">
+            <i class="fas fa-robot"></i>
+            <span>IA</span>
+          </div>
+        </div>
+        
+        <div class="projects-grid">
+          <div v-for="project in projects" :key="project.id" class="project-card">
+            <div class="project-image">
+              <img :src="project.image" :alt="project.title" />
+            </div>
+            <div class="project-overlay">
+              <div class="project-content">
+                <span class="project-category">{{ project.category }}</span>
+                <h3 class="project-title">{{ project.title }}</h3>
+                <p class="project-description">{{ project.description }}</p>
+                <a :href="project.url" class="project-link">Voir le projet</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Contact Section -->
+    <section id="contact" class="section">
+      <div class="container">
+        <div class="section-header">
+          <h2>Me <span class="accent">Contacter</span></h2>
+          <p>Discutons de vos projets de sécurité et développement</p>
+        </div>
+        
+        <div class="contact-container">
+          <div class="contact-info">
+            <div class="contact-card">
+              <i class="fas fa-envelope contact-icon"></i>
+              <h3>Email</h3>
+              <p>emmanuel.yakam@antic.cm</p>
+            </div>
+            
+            <div class="contact-card">
+              <i class="fas fa-phone-alt contact-icon"></i>
+              <h3>Téléphone</h3>
+              <p>+237 6XX XX XX XX</p>
+            </div>
+            
+            <div class="contact-card">
+              <i class="fas fa-map-marker-alt contact-icon"></i>
+              <h3>Localisation</h3>
+              <p>ANTIC, CNCCE, Yaoundé, Cameroun</p>
+            </div>
+          </div>
+          
+          <div class="contact-form-container">
+            <form class="contact-form">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="name">Nom</label>
+                  <input type="text" id="name" name="name" placeholder="Votre nom" required />
+                </div>
+                <div class="form-group">
+                  <label for="email">Email</label>
+                  <input type="email" id="email" name="email" placeholder="Votre email" required />
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="message">Message</label>
+                <textarea id="message" name="message" placeholder="Votre message" rows="5" required></textarea>
+              </div>
+              
+              <button type="submit" class="btn btn-primary">
+                Envoyer le message
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Footer -->
+    <Footer />
+  </div>
+</template>
+
+<style>
+@import './assets/main.css';

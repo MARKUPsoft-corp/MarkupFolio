@@ -1689,7 +1689,6 @@ const generateBinaryBackground = () => {
     padding: 12px;
   }
   
-  .hero-blur-overlay {
     backdrop-filter: blur(25px); /* Réduire légèrement le flou sur mobile */
     -webkit-backdrop-filter: blur(25px);
     background: linear-gradient(to bottom,
@@ -1708,13 +1707,13 @@ const generateBinaryBackground = () => {
   }
   
   .circle-ring {
-    width: 170px;
-    height: 170px;
+    width: 150px;
+    height: 150px;
   }
   
   .orbit-ring-orange {
-    width: 210px;
-    height: 210px;
+    width: 190px;
+    height: 190px;
     border-width: 2px;
   }
   
@@ -1724,7 +1723,7 @@ const generateBinaryBackground = () => {
   }
   
   .orbit-container {
-    width: 42%;
+    width: 40%;
   }
   
   .grid-skills-container {
@@ -1740,7 +1739,7 @@ const generateBinaryBackground = () => {
   }
   
   .typing-text, .typing-firstname {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
   }
   
   .hero-subtitle-small {
@@ -1752,8 +1751,39 @@ const generateBinaryBackground = () => {
   }
 }
 
+/* Styles pour l'image d'arrière-plan de la section hero */
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  overflow: hidden;
+}
+
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  transition: transform 15s ease-in-out; /* Transition très lente pour un effet subtil */
+}
+
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  backdrop-filter: blur(35px); /* Flou encore plus prononcé */
+  -webkit-backdrop-filter: blur(35px);
+  background: linear-gradient(to bottom,
+    rgba(0, 0, 0, 0.55),
+    rgba(0, 30, 40, 0.5),
+    rgba(0, 0, 0, 0.3)
+  ); /* Dégradé qui s'harmonise avec les couleurs du site */
+  z-index: 1;
+}
+
 /* Ajouter un effet de vignette pour adoucir les bords */
-.hero-background::after {
   content: '';
   position: absolute;
   top: 0;
@@ -1960,7 +1990,6 @@ html {
   border: 2px solid var(--primary);
   border-radius: 50%;
   opacity: 0;
-  transform: scale(1.1);
   transition: all 0.3s ease;
 }
 
@@ -2173,14 +2202,12 @@ a, button, .project-card, .contact-card, input, textarea {
   
   .grid-skills-container {
     width: 55%;
-    gap: 8px;
   }
   
   .grid-skill .skill-bubble {
-    width: 30px;
-    height: 30px;
-    font-size: 0.9rem;
-    border-width: 2px;
+    width: 34px;
+    height: 34px;
+    font-size: 1rem;
   }
   
   .crypto-animation {
@@ -2203,10 +2230,5 @@ a, button, .project-card, .contact-card, input, textarea {
   .hero-subtitle {
     font-size: 0.8rem;
   }
-}
-
-@keyframes slowZoom {
-  0% { transform: scale(1.1); }
-  100% { transform: scale(1.2); }
 }
 </style>
