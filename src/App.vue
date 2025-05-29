@@ -3,11 +3,22 @@ import { ref, onMounted } from 'vue';
 import NavBar from './components/NavBar.vue';
 import Footer from './components/Footer.vue';
 
+// Utility function for debouncing
+function debounce(func, delay) {
+  let timeoutId;
+  return function(...args) {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => {
+      func.apply(this, args);
+    }, delay);
+  };
+}
+
 // Gestion du thème sombre
 const isDarkMode = ref(false);
 
 // Variable pour stocker l'URL de l'image de profil pour la navbar
-const profileImageUrl = ref('');
+const profileImageUrl = ref(''); // This will hold the path to the small nav image
 
 // Compétences avec leurs logos
 const skills = [
@@ -27,7 +38,8 @@ const projects = [
     id: 1,
     title: 'Système de Cryptographie',
     category: 'Sécurité',
-    image: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
+    image: '/images/portfolio/project-crypto-api.jpg',
+    imageWebp: '/images/portfolio/project-crypto-api.webp',
     url: '#',
     description: 'Solution de cryptographie avancée pour la sécurisation des données'
   },
@@ -35,7 +47,8 @@ const projects = [
     id: 2,
     title: 'API Microservices',
     category: 'Backend',
-    image: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
+    image: '/images/portfolio/project-crypto-api.jpg', // Uses the same image as project 1
+    imageWebp: '/images/portfolio/project-crypto-api.webp',
     url: '#',
     description: 'Architecture de microservices RESTful hautement évolutive'
   },
@@ -43,7 +56,8 @@ const projects = [
     id: 3,
     title: 'Dashboard Analytics',
     category: 'Full Stack',
-    image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
+    image: '/images/portfolio/project-analytics.jpg',
+    imageWebp: '/images/portfolio/project-analytics.webp',
     url: '#',
     description: 'Tableau de bord interactif avec visualisation de données en temps réel'
   }
@@ -54,100 +68,143 @@ const typingText = ref('');
 const typingFirstName = ref('');
 const lastName = 'YAKAM TCHAMEGNI';
 const firstName = 'Emmanuel';
-let typingInterval = null;
 let isDeleting = false;
 let isTypingLastName = true;
 let charIndex = 0;
+let typingRequestAnimationId = null;
+let lastTypingTimestamp = 0;
+let typingTimeAccumulator = 0;
+
+const TYPING_SPEED = 150; // ms per character
+const DELETING_SPEED = 80; // ms per character
+const PAUSE_BEFORE_FIRSTNAME = 1000; // ms
+const PAUSE_AT_END = 2000; // ms
+const PAUSE_BEFORE_RESTART = 500; // ms
 
 // Texte chiffré pour l'animation
 const cryptoText = ref('');
 const plainText = "CRYPTOGRAPHY AND BACKEND DEVELOPMENT";
-let cryptoInterval = null;
+let cryptoRequestAnimationId = null;
+let lastCryptoTimestamp = 0;
+let cryptoTimeAccumulator = 0;
+let cryptoProgress = 0;
+const CRYPTO_ANIMATION_SPEED = 100; // ms per character update
+const CRYPTO_RESTART_DELAY = 3000; // ms
 
-// Fonction de typing
-const typeText = () => {
+// Fonction de typing avec requestAnimationFrame
+const typeText = (timestamp) => {
+  if (!lastTypingTimestamp) {
+    lastTypingTimestamp = timestamp;
+  }
+  const deltaTime = timestamp - lastTypingTimestamp;
+  lastTypingTimestamp = timestamp;
+  typingTimeAccumulator += deltaTime;
+
+  let currentDelay = TYPING_SPEED;
+
   if (isTypingLastName) {
-    // Typing du nom de famille
     const currentText = lastName.substring(0, charIndex);
     typingText.value = currentText;
-    
+
     if (!isDeleting && charIndex < lastName.length) {
-      // Typing
-      charIndex++;
-      setTimeout(typeText, 150);
+      currentDelay = TYPING_SPEED;
+      if (typingTimeAccumulator >= currentDelay) {
+        charIndex++;
+        typingTimeAccumulator = 0;
+      }
     } else if (!isDeleting && charIndex === lastName.length) {
-      // Pause avant de commencer le prénom
-      setTimeout(() => {
+      currentDelay = PAUSE_BEFORE_FIRSTNAME;
+      if (typingTimeAccumulator >= currentDelay) {
         isTypingLastName = false;
         charIndex = 0;
-        typeText();
-      }, 1000);
+        typingTimeAccumulator = 0;
+      }
     } else if (isDeleting && charIndex > 0) {
-      // Deleting
-      charIndex--;
-      setTimeout(typeText, 80);
+      currentDelay = DELETING_SPEED;
+      if (typingTimeAccumulator >= currentDelay) {
+        charIndex--;
+        typingTimeAccumulator = 0;
+      }
     } else if (isDeleting && charIndex === 0) {
-      // Recommencer
-      isDeleting = false;
-      setTimeout(typeText, 500);
+      currentDelay = PAUSE_BEFORE_RESTART;
+      if (typingTimeAccumulator >= currentDelay) {
+        isDeleting = false;
+        // isTypingLastName remains true to restart last name, or set to false to start with first name
+        // For this logic, it should restart the last name, so isTypingLastName = true;
+        typingTimeAccumulator = 0;
+      }
     }
-  } else {
-    // Typing du prénom
+  } else { // Typing First Name
     const currentText = firstName.substring(0, charIndex);
     typingFirstName.value = currentText;
-    
+
     if (!isDeleting && charIndex < firstName.length) {
-      // Typing
-      charIndex++;
-      setTimeout(typeText, 150);
+      currentDelay = TYPING_SPEED;
+      if (typingTimeAccumulator >= currentDelay) {
+        charIndex++;
+        typingTimeAccumulator = 0;
+      }
     } else if (!isDeleting && charIndex === firstName.length) {
-      // Pause à la fin
-      setTimeout(() => {
+      currentDelay = PAUSE_AT_END;
+      if (typingTimeAccumulator >= currentDelay) {
         isDeleting = true;
-        typeText();
-      }, 2000);
+        typingTimeAccumulator = 0;
+      }
     } else if (isDeleting && charIndex > 0) {
-      // Deleting
-      charIndex--;
-      setTimeout(typeText, 80);
+      currentDelay = DELETING_SPEED;
+      if (typingTimeAccumulator >= currentDelay) {
+        charIndex--;
+        typingTimeAccumulator = 0;
+      }
     } else if (isDeleting && charIndex === 0) {
-      // Revenir au nom de famille
-      isTypingLastName = true;
-      isDeleting = false;
-      setTimeout(typeText, 500);
+      currentDelay = PAUSE_BEFORE_RESTART;
+      if (typingTimeAccumulator >= currentDelay) {
+        isTypingLastName = true;
+        isDeleting = false;
+        typingTimeAccumulator = 0;
+      }
     }
   }
+  typingRequestAnimationId = requestAnimationFrame(typeText);
 };
 
-// Fonction pour simuler un texte chiffré
-const animateCrypto = () => {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;:,./<>?';
-  let progress = 0;
-  let result = '';
-  
-  cryptoInterval = setInterval(() => {
-    result = '';
-    
+
+// Fonction pour simuler un texte chiffré avec requestAnimationFrame
+const animateCrypto = (timestamp) => {
+  if (!lastCryptoTimestamp) {
+    lastCryptoTimestamp = timestamp;
+  }
+  const deltaTime = timestamp - lastCryptoTimestamp;
+  lastCryptoTimestamp = timestamp;
+  cryptoTimeAccumulator += deltaTime;
+
+  if (cryptoTimeAccumulator >= CRYPTO_ANIMATION_SPEED) {
+    cryptoTimeAccumulator = 0;
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;:,./<>?';
+    let result = '';
+
     for (let i = 0; i < plainText.length; i++) {
-      if (i < progress) {
+      if (i < cryptoProgress) {
         result += plainText[i];
       } else {
         result += chars.charAt(Math.floor(Math.random() * chars.length));
       }
     }
-    
     cryptoText.value = result;
-    
-    if (progress >= plainText.length) {
-      clearInterval(cryptoInterval);
-      setTimeout(() => {
-        progress = 0;
-        animateCrypto();
-      }, 3000);
-    }
-    
-    progress += 1;
-  }, 100);
+    cryptoProgress += 1;
+  }
+
+  if (cryptoProgress < plainText.length) {
+    cryptoRequestAnimationId = requestAnimationFrame(animateCrypto);
+  } else {
+    // Animation finished, schedule restart
+    setTimeout(() => {
+      cryptoProgress = 0;
+      lastCryptoTimestamp = 0; // Reset for next animation cycle
+      cryptoTimeAccumulator = 0;
+      cryptoRequestAnimationId = requestAnimationFrame(animateCrypto);
+    }, CRYPTO_RESTART_DELAY);
+  }
 };
 
 // Bascule du thème
@@ -182,13 +239,13 @@ onMounted(() => {
   createFloatingParticles();
   
   // Démarrer l'effet de typing
-  typeText();
+  typingRequestAnimationId = requestAnimationFrame(typeText);
   
   // Générer du code binaire pour l'arrière-plan
   generateBinaryBackground();
   
   // Démarrer l'animation de texte cryptographique
-  animateCrypto();
+  cryptoRequestAnimationId = requestAnimationFrame(animateCrypto);
 });
 
 // Animation des particules des technologies
@@ -203,8 +260,21 @@ const startOrbitAnimation = () => {
 
 // Variables pour garder la référence de l'image originale et son clone
 let originalImgSrc = '';
-let heroImgElement = null;
-let navbarImgContainer = null;
+// heroImgElement will be a Vue ref
+// navbarImgContainer will still be queried, but ideally refactored later
+
+const heroImgElement = ref(null); // For the hero image <img> tag
+// Note: navbarImgContainer is more complex due to being in a child component.
+// For now, direct querySelector will remain, but it's an area for future prop-based refactoring.
+let navbarImgContainerDom = null; // To store the DOM element from querySelector
+
+// Reactive states for dynamic styles
+const orbiteContainerStyle = ref({});
+const gridContainerStyle = ref({});
+const heroSectionStyle = ref({});
+const imageWrapperStyle = ref({});
+// profileImageUrl is already reactive and passed as a prop.
+// NavBar.vue should handle its own 'active' class based on profileImageUrl.
 
 // Initialiser les compétences en grille
 const initGridSkills = () => {
@@ -215,107 +285,89 @@ const initGridSkills = () => {
   setGridSkillsVisibility(mediaQuery.matches);
   
   // Écouter les changements de taille d'écran
-  mediaQuery.addEventListener('change', (e) => {
+  const handleMediaQueryChange = debounce((e) => {
     setGridSkillsVisibility(e.matches);
-  });
+  }, 250);
+  mediaQuery.addEventListener('change', handleMediaQueryChange);
 };
 
 // Définir la visibilité des compétences en grille selon la taille d'écran
 const setGridSkillsVisibility = (isSmallScreen) => {
-  const orbiteContainer = document.querySelector('.orbit-skills-container');
-  const gridContainer = document.querySelector('.grid-skills-container');
-  const imageWrapper = document.querySelector('.hero-image-wrapper');
-  const heroSection = document.querySelector('.hero-section');
-  const navbarProfileImg = document.querySelector('.navbar-profile-img');
-  const circleFrame = document.querySelector('.circle-frame');
-  
-  if (!heroImgElement && circleFrame) {
-    heroImgElement = circleFrame.querySelector('img');
-    if (heroImgElement) {
-      originalImgSrc = heroImgElement.src;
-      console.log('Image source found:', originalImgSrc);
-    }
-  }
-  
-  if (!navbarImgContainer) {
-    navbarImgContainer = navbarProfileImg;
+  // Storing original image source is no longer needed in this way,
+  // as we will directly use the new local paths.
+  // if (!originalImgSrc && heroImgElement.value && heroImgElement.value.src) {
+  //   originalImgSrc = heroImgElement.value.src;
+  // }
+
+  // Handling navbarImgContainerDom - still using querySelector as per phased refactoring
+  if (!navbarImgContainerDom) {
+    navbarImgContainerDom = document.querySelector('.navbar-profile-img');
   }
   
   if (isSmallScreen) {
-    // Mode mobile : déplacer l'image vers la navbar et masquer les icônes
-    // 1. Cacher l'orbite et les compétences
-    if (orbiteContainer) {
-      orbiteContainer.style.opacity = '0';
-      orbiteContainer.style.transform = 'scale(0.8)';
-      orbiteContainer.style.animation = 'orbitDisappear 0.5s forwards';
-      orbiteContainer.style.pointerEvents = 'none';
-    }
+    orbiteContainerStyle.value = {
+      opacity: '0',
+      transform: 'scale(0.8)',
+      animation: 'orbitDisappear 0.5s forwards',
+      pointerEvents: 'none',
+    };
+    // For mobile, grid skills are not shown, these styles effectively hide it.
+    gridContainerStyle.value = {
+      opacity: '0',
+      transform: 'translateX(20px)', // Or any transform that hides it
+      pointerEvents: 'none',
+    };
+    heroSectionStyle.value = {
+      paddingTop: '100px',
+      minHeight: 'auto',
+    };
+    imageWrapperStyle.value = {
+      opacity: '0',
+      height: '0',
+      overflow: 'hidden',
+      marginBottom: '0',
+    };
     
-    if (gridContainer) {
-      gridContainer.style.opacity = '0';
-      gridContainer.style.transform = 'translateX(20px)';
-      gridContainer.style.pointerEvents = 'none';
-    }
-    
-    // 2. Réduire l'espace du hero
-    if (heroSection) {
-      heroSection.style.paddingTop = '100px';
-      heroSection.style.minHeight = 'auto';
-    }
-    
-    // 3. Masquer la section image du hero
-    if (imageWrapper) {
-      imageWrapper.style.opacity = '0';
-      imageWrapper.style.height = '0';
-      imageWrapper.style.overflow = 'hidden';
-      imageWrapper.style.marginBottom = '0';
-    }
-    
-    // 4. Afficher l'image dans la navbar
-    if (navbarImgContainer && originalImgSrc) {
-      navbarImgContainer.classList.add('active');
-      // Mettre à jour la variable réactive pour l'URL de l'image avec un délai 
-      // pour s'assurer que les styles CSS ont le temps de s'appliquer
+    if (navbarImgContainerDom) {
+      // Direct DOM manipulation for navbar-profile-img active class.
+      // NavBar.vue should ideally handle this based on profileImgSrc prop.
+      navbarImgContainerDom.classList.add('active');
       setTimeout(() => {
-        console.log('Setting profile image URL to:', originalImgSrc);
-        profileImageUrl.value = originalImgSrc;
+        // Use the new local path for the small navigation image
+        profileImageUrl.value = '/images/portfolio/profile-nav.webp'; 
       }, 50);
     }
     
-  } else {
-    // Mode desktop : image à droite avec orbite
-    if (orbiteContainer) {
-      orbiteContainer.style.opacity = '1';
-      orbiteContainer.style.transform = 'scale(1)';
-      orbiteContainer.style.animation = '';
-      orbiteContainer.style.pointerEvents = 'auto';
-    }
+  } else { // Desktop mode
+    orbiteContainerStyle.value = {
+      opacity: '1',
+      transform: 'scale(1)',
+      animation: '', // Reset animation
+      pointerEvents: 'auto',
+    };
+    // For desktop, grid skills are typically hidden by default and orbit skills shown.
+    // Styles to ensure grid is hidden.
+    gridContainerStyle.value = {
+      opacity: '0',
+      transform: 'translateX(30px)', 
+      pointerEvents: 'none',
+    };
+    heroSectionStyle.value = {
+      paddingTop: '120px',
+      minHeight: '90vh',
+    };
+    imageWrapperStyle.value = {
+      opacity: '1',
+      height: '580px',
+      overflow: 'visible',
+      marginBottom: '', // Reset any mobile-specific margin
+    };
     
-    if (gridContainer) {
-      gridContainer.style.opacity = '0';
-      gridContainer.style.transform = 'translateX(30px)';
-      gridContainer.style.pointerEvents = 'none';
+    if (navbarImgContainerDom) {
+      // Direct DOM manipulation for navbar-profile-img active class.
+      navbarImgContainerDom.classList.remove('active');
     }
-    
-    // Restaurer l'apparence du hero
-    if (heroSection) {
-      heroSection.style.paddingTop = '120px';
-      heroSection.style.minHeight = '90vh';
-    }
-    
-    // Rétablir l'image du hero
-    if (imageWrapper) {
-      imageWrapper.style.opacity = '1';
-      imageWrapper.style.height = '580px';
-      imageWrapper.style.overflow = 'visible';
-    }
-    
-    // Masquer l'image dans la navbar
-    if (navbarImgContainer) {
-      navbarImgContainer.classList.remove('active');
-      // Effacer l'URL de l'image
-      profileImageUrl.value = '';
-    }
+    profileImageUrl.value = ''; // Clear the image for NavBar, as hero image is visible
   }
 };
 
@@ -348,7 +400,7 @@ const initializeScrollAnimations = () => {
 // Créer des particules flottantes
 const createFloatingParticles = () => {
   const container = document.querySelector('.portfolio-app');
-  const particlesCount = 20;
+  const particlesCount = 15; // Optimization: Reduced from 20
   
   for (let i = 0; i < particlesCount; i++) {
     const particle = document.createElement('div');
@@ -387,7 +439,8 @@ const generateBinaryBackground = () => {
   const allChars = binaryChars + cryptoChars + codeChars;
   
   let binaryString = '';
-  for (let i = 0; i < 5000; i++) {
+  const characterCount = 1000; // Optimization: Reduced from 5000
+  for (let i = 0; i < characterCount; i++) {
     binaryString += allChars.charAt(Math.floor(Math.random() * allChars.length));
   }
   
@@ -412,7 +465,7 @@ const generateBinaryBackground = () => {
     <NavBar :isDarkMode="isDarkMode" :profileImgSrc="profileImageUrl" @toggle-theme="toggleTheme" />
     
     <!-- Hero Section -->
-    <section id="hero" class="hero-section">
+    <section id="hero" class="hero-section" :style="heroSectionStyle.value">
       <div class="container">
         <div class="hero-content">
           <div class="hero-text">
@@ -438,13 +491,17 @@ const generateBinaryBackground = () => {
             </div>
           </div>
           
-          <div class="hero-image-wrapper">
+          <div class="hero-image-wrapper" :style="imageWrapperStyle.value">
             <!-- Orbite des technologies -->
             <div class="orbit-container">
               <!-- Image circulaire flottante -->
               <div class="circle-frame">
                 <div class="circle-content">
-                  <img src="https://images.unsplash.com/photo-1607799279861-4dd421887fb3?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" alt="Emmanuel YAKAM" />
+                  <picture>
+                    <source srcset="/images/portfolio/profile-main.webp" type="image/webp">
+                    <source srcset="/images/portfolio/profile-main.jpg" type="image/jpeg">
+                    <img src="/images/portfolio/profile-main.jpg" alt="Emmanuel YAKAM" ref="heroImgElement" />
+                  </picture>
                 </div>
                 
                 <!-- Anneaux décoratifs autour du cercle -->
@@ -453,7 +510,7 @@ const generateBinaryBackground = () => {
               </div>
               
               <!-- Technologies en orbite (visibles sur grands écrans) -->
-              <div class="orbit-skills-container">
+              <div class="orbit-skills-container" :style="orbiteContainerStyle.value">
                 <div v-for="(skill, index) in skills" :key="`orbit-${skill.name}`" 
                   class="orbit-skill" 
                   :style="{ 
@@ -467,7 +524,7 @@ const generateBinaryBackground = () => {
               </div>
               
               <!-- Technologies en grille (visibles sur petits écrans) -->
-              <div class="grid-skills-container">
+              <div class="grid-skills-container" :style="gridContainerStyle.value">
                 <div v-for="(skill, index) in skills" :key="`grid-${skill.name}`" 
                     class="grid-skill" 
                     :style="{ 
@@ -545,7 +602,11 @@ const generateBinaryBackground = () => {
         <div class="projects-grid">
           <div v-for="project in projects" :key="project.id" class="project-card">
             <div class="project-image">
-              <img :src="project.image" :alt="project.title" />
+              <picture>
+                <source :srcset="project.imageWebp" type="image/webp" v-if="project.imageWebp">
+                <source :srcset="project.image" type="image/jpeg">
+                <img :src="project.image" :alt="project.title" />
+              </picture>
             </div>
             <div class="project-overlay">
               <div class="project-content">
@@ -667,7 +728,7 @@ const generateBinaryBackground = () => {
   left: 0;
   width: 100%;
   height: 100%;
-  backdrop-filter: blur(120px);
+  backdrop-filter: blur(40px); /* Optimization: Reduced from 120px */
   z-index: 1;
 }
 
@@ -1180,7 +1241,9 @@ const generateBinaryBackground = () => {
   height: 100%;
   background: linear-gradient(90deg, var(--primary), var(--accent));
   border-radius: 5px;
-  transition: width 1.2s cubic-bezier(0.65, 0, 0.35, 1);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 1.2s cubic-bezier(0.65, 0, 0.35, 1);
 }
 
 /* Portfolio */

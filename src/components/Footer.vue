@@ -245,7 +245,8 @@ const socialLinks = ref([
   border-radius: 50%;
   background-color: var(--bg-alt);
   color: var(--text-main);
-  transition: all 0.3s ease;
+  /* transition: all 0.3s ease; */ /* Replaced by specific transitions below */
+  transition: transform 0.3s ease, color 0.3s ease;
   position: relative;
   overflow: hidden;
 }
@@ -256,16 +257,17 @@ const socialLinks = ref([
   width: 100%;
   height: 100%;
   background: var(--primary);
-  top: 100%;
+  top: 0; /* Set top to 0 for translateY to work as expected */
   left: 0;
-  transition: all 0.3s ease;
+  transform: translateY(100%); /* Initial state: moved down */
+  transition: transform 0.3s ease; /* Transition only transform */
   z-index: 1;
 }
 
 .social-link i {
   position: relative;
   z-index: 2;
-  transition: all 0.3s ease;
+  transition: color 0.3s ease; /* Icon color transition */
 }
 
 .social-link:hover {
@@ -274,7 +276,7 @@ const socialLinks = ref([
 }
 
 .social-link:hover::before {
-  top: 0;
+  transform: translateY(0); /* Hover state: move to original position */
 }
 
 .footer-bottom {

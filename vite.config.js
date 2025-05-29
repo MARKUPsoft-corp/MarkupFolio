@@ -16,11 +16,22 @@ export default defineConfig({
     open: true
   },
   optimizeDeps: {
-    include: ['vue', 'vue-router']
+    include: ['vue'] // Removed 'vue-router'
   },
   build: {
-    chunkSizeWarningLimit: 1000,
+    chunkSizeWarningLimit: 500, // Changed from 1000
     rollupOptions: {
+      output: { // Added output configuration for manualChunks
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('gsap')) return 'vendor-gsap';
+            if (id.includes('tsparticles') || id.includes('vue3-particles')) return 'vendor-particles';
+            if (id.includes('vue-kinesis')) return 'vendor-vue-kinesis';
+            if (id.includes('/vue/') && !id.includes('@vitejs') && !id.includes('plugin-vue')) return 'vendor-vue';
+            return 'vendor-others';
+          }
+        }
+      },
       onwarn(warning, warn) {
         // Ignorer certaines erreurs courantes
         if (warning.code === 'CIRCULAR_DEPENDENCY') return

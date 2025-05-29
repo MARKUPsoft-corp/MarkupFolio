@@ -1,6 +1,38 @@
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue';
 
+// Utility function for throttling
+function throttle(func, limit) {
+  let inThrottle;
+  let lastFunc;
+  let lastRan;
+  return function(...args) {
+    const context = this;
+    if (!inThrottle) {
+      func.apply(context, args);
+      lastRan = Date.now();
+      inThrottle = true;
+      setTimeout(() => {
+        inThrottle = false;
+        if (lastFunc) {
+          lastFunc.apply(context, args); // Call with latest args
+          lastRan = Date.now();
+          lastFunc = null; // Clear lastFunc after execution
+        }
+      }, limit);
+    } else {
+      clearTimeout(lastFunc); // Clear previous timeout if any
+      lastFunc = setTimeout(() => { // Set a new timeout
+        if ((Date.now() - lastRan) >= limit) {
+          func.apply(context, args);
+          lastRan = Date.now();
+        }
+      }, limit - (Date.now() - lastRan));
+    }
+  };
+}
+
+
 // Props
 const props = defineProps({
   isDarkMode: {
@@ -15,12 +47,14 @@ const props = defineProps({
 
 // Calculer l'URL de l'image avec solution de secours
 const imageSource = computed(() => {
-  return props.profileImgSrc || 'https://images.unsplash.com/photo-1607799279861-4dd421887fb3?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80';
+  // Prioritize passed prop. If empty, use local fallback.
+  // App.vue is responsible for passing the correct (local WebP or JPG) path via profileImgSrc.
+  return props.profileImgSrc || '/images/portfolio/profile-nav.jpg'; // Default fallback
 });
 
 // Surveiller les changements de l'URL de l'image
 watch(() => props.profileImgSrc, (newValue) => {
-  console.log('Image URL changed:', newValue);
+  // Image URL changed, newValue contains the new URL
 });
 
 // Émission d'événements
@@ -45,6 +79,9 @@ const handleScroll = () => {
   isScrolled.value = window.scrollY > 50;
 };
 
+// Throttled version of handleScroll
+const throttledHandleScroll = throttle(handleScroll, 150);
+
 // Navigation douce
 const scrollToSection = (sectionId) => {
   const element = document.getElementById(sectionId);
@@ -58,8 +95,8 @@ const scrollToSection = (sectionId) => {
 };
 
 onMounted(() => {
-  window.addEventListener('scroll', handleScroll);
-  handleScroll();
+  window.addEventListener('scroll', throttledHandleScroll);
+  handleScroll(); // Call once initially to set the correct state
 });
 </script>
 
@@ -73,8 +110,8 @@ onMounted(() => {
             :src="imageSource" 
             :alt="`Profile ${profileImgSrc ? 'loaded' : 'not loaded'}`" 
             class="profile-image"
-            @load="console.log('Image loaded successfully')"
-            @error="console.error('Failed to load image:', imageSource)"
+            @load="() => {}"
+            @error="() => {}"
           />
         </div>
       </div>
@@ -125,7 +162,7 @@ onMounted(() => {
   box-shadow: 0 3px 15px rgba(0, 0, 0, 0.05);
   z-index: 1000;
   backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
+  transition: height 0.3s ease, box-shadow 0.3s ease;
 }
 
 .navbar.scrolled {
@@ -152,7 +189,7 @@ onMounted(() => {
   padding: 5px 10px;
   border-radius: 5px;
   overflow: hidden;
-  transition: all 0.3s ease;
+  /* transition: all 0.3s ease; -- Removing as direct properties of 'a' are not explicitly animated on hover, pseudos handle effects */
 }
 
 .navbar-logo a::before {
@@ -201,14 +238,14 @@ onMounted(() => {
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--text-main);
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, color 0.3s ease;
   position: relative;
   z-index: 2;
 }
 
 .accent-text {
   color: var(--primary);
-  transition: all 0.3s ease;
+  transition: color 0.3s ease;
 }
 
 .nav-links {
@@ -221,19 +258,21 @@ onMounted(() => {
   color: var(--text-main);
   font-size: 1rem;
   font-weight: 500;
-  transition: all 0.3s ease;
+  transition: color 0.3s ease; /* Only color is directly transitioned on .nav-link hover */
   position: relative;
 }
 
 .nav-link::after {
   content: '';
   position: absolute;
-  width: 0%;
+  width: 100%; /* Full width to be scaled */
   height: 2px;
   background-color: var(--primary);
   bottom: -5px;
   left: 0;
-  transition: width 0.3s ease;
+  transform: scaleX(0);
+  transform-origin: left; /* Or center, depending on desired effect */
+  transition: transform 0.3s ease;
 }
 
 .nav-link:hover {
@@ -241,7 +280,7 @@ onMounted(() => {
 }
 
 .nav-link:hover::after {
-  width: 100%;
+  transform: scaleX(1);
 }
 
 .navbar-actions {
@@ -262,7 +301,7 @@ onMounted(() => {
   cursor: pointer;
   color: var(--text-main);
   font-size: 1.2rem;
-  transition: all 0.3s ease;
+  transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease;
   outline: none;
 }
 
@@ -291,7 +330,7 @@ onMounted(() => {
   width: 100%;
   height: 2px;
   background-color: var(--text-main);
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, opacity 0.3s ease;
   left: 0;
 }
 
@@ -328,7 +367,7 @@ onMounted(() => {
   opacity: 0;
   overflow: hidden;
   margin-right: 0;
-  transition: all 0.5s ease;
+  transition: width 0.5s ease, opacity 0.5s ease, margin-right 0.5s ease, transform 0.5s ease, visibility 0.5s ease;
   display: flex;
   align-items: center;
   position: relative;
@@ -469,7 +508,7 @@ onMounted(() => {
     padding: 0;
     gap: 0;
     overflow: hidden;
-    transition: height 0.3s ease;
+    transition: height 0.3s ease, padding 0.3s ease; /* Added padding to transition */
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
   }
   
